@@ -26,7 +26,7 @@ App = {
 
   //Initialize connection from client(frontend) to blockchain
   initWeb3: async function() {
-    
+    App.signer = await App.web3Provider.getSigner();
     if(App.web3Provider !== 'null'){
       
       //If a web3 instance is already provided by Metamask.
