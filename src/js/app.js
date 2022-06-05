@@ -3,10 +3,7 @@ App = {
   contracts: {},
   account:"0X0",
   electionContractAddress: "0x414C7A406b41F994D733764ae48f2aa36F10ab05",
-  electionContractABI: [
-    "function addCandidate (string memory _name) private",
-    "function vote (uint _candidateId) public"
-  ],
+  electionContractABI: null,
   signer: null,
 
   init: async function() {
@@ -51,7 +48,7 @@ App = {
   //Loads contracts to frontend application
   initContract:async function() {
 
-    $.getJSON("js/Election.json", (election)=>{
+    $.getJSON("src/js/Election.json", (election)=>{
       App.electionContractABI = election;
       App.contracts.Election = new ethers.Contract(
         App.electionContractAddress,
