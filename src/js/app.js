@@ -2,36 +2,65 @@ App = {
   web3Provider: null,
   contracts: {},
   account:"0X0",
+  electionContractAddress: "0x414C7A406b41F994D733764ae48f2aa36F10ab05",
+  electionContractABI: [
+    "function addCandidate (string memory _name) private",
+    "function vote (uint _candidateId) public"
+  ],
+  signer: null,
 
-  init: function() {
+  init: async function() {
     return App.initWeb3();
   },
 
+  connectMetamask: async function() {
+    App.web3Provider = new ethers.providers.Web3Provider(window.ethereum)
+    await App.web3Provider.send("eth_requestAccounts", []);
+    App.signer = await App.web3Provider.getSigner();
+    console.log("Account address :", await App.signer.getAddress());
+    App.account = await App.signer.getAddress();
+    $("#accountAddress").html("Your Account: " + App.account);
+    App.init();
+    return App.signer;
+  },
+
   //Initialize connection from client(frontend) to blockchain
-  initWeb3: function() {
+  initWeb3: async function() {
     
-    if(typeof web3 !== 'undefined'){
+    if(App.web3Provider !== 'null'){
+      
       //If a web3 instance is already provided by Metamask.
-      App.web3Provider = web3.currentProvider;
-      web3 = new Web3(web3.currentProvider);
-    }else{
-      App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
+      $("#connect").prop("disabled", true);
+      App.web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+      App.signer = await App.web3Provider.getSigner();
+      App.account = App.signer.getAddress();
       web3 = new Web3(App.web3Provider);
+      return App.initContract();
+
+    }else{
+      $("#connect").prop("disabled", false);
+      // App.web3Provider = new ethers.providers.Web3Provider(window.ethereum)
+      // web3 = new Web3(App.web3Provider);
+      alert("Please connect to Metamask");
+      return;
 
     }
 
-    return App.initContract();
   },
 
   //Loads contracts to frontend application
-  initContract: function() {
-    $.getJSON("Election.json", (election)=>{
-      App.contracts.Election = TruffleContract(election);
+  initContract:async function() {
 
-      App.contracts.Election.setProvider(App.web3Provider);
-      
+    $.getJSON("js/Election.json", (election)=>{
+      App.electionContractABI = election;
+      App.contracts.Election = new ethers.Contract(
+        App.electionContractAddress,
+        App.electionContractABI,
+        App.web3Provider
+      );
+      console.log(App.electionContractABI);
+
       App.listenForEvents();
-
       return App.render();
 
     });
@@ -39,6 +68,7 @@ App = {
 
   listenForEvents: ()=>{
     App.contracts.Election.deployed().then((instance)=>{
+      console.log(instance); 
       instance.votedEvent({}, {
         //Check for event from 0 block to latests
         fromBlock: 0,
@@ -50,7 +80,7 @@ App = {
     })
   },
 
-  render: ()=>{
+  render: async ()=>{
     var electionInstance;
     var loader = $("#loader");
     var content = $("#content");
@@ -58,17 +88,14 @@ App = {
     loader.show();
     content.hide();
 
-    //Load account data
-    web3.eth.getCoinbase((err, account)=>{
-      if(err === null){
-        App.account = account;
-        $("#accountAddress").html("Your Account: " + account);
-      }
-    });
-
     //Load contract data
     App.contracts.Election.deployed().then((instance)=>{
       electionInstance = instance;
+      console.log("electionInstance", electionInstance);
+    });
+    App.contracts.Election.deployed().then((instance)=>{
+      electionInstance = instance;
+      console.log("candidatesCount",electionInstance.candidatesCount());
       return electionInstance.candidatesCount();
     }).then((candidatesCount)=>{
       var candidatesResults = $("#candidatesResults");
@@ -78,6 +105,7 @@ App = {
       candidatesSelect.empty();
 
       for(var i = 1; i<= candidatesCount; i++){
+        console.log("candidates",electionInstance.candidates(i));
         electionInstance.candidates(i).then((candidate)=>{
           var id = candidate[0];
           var name = candidate[1];
@@ -91,10 +119,13 @@ App = {
            candidatesSelect.append(candidateOption);
         });
       }
+      console.log("account",App.account);
+
+      console.log("voters",electionInstance.voters(App.account));
       return electionInstance.voters(App.account);
     }).then((hasVoted)=>{
       if(hasVoted){
-        $("form").hide();
+        // $("form").hide();
       }
       loader.hide();
       content.show();
@@ -104,20 +135,25 @@ App = {
   },
 
   castVote: ()=>{
+    // $("#content").hide();
+    // $("#loader").show();
     var candidateId = $('#candidatesSelect').val();
     App.contracts.Election.deployed().then((instance)=>{
-      return instance.vote(candidateId, {from: App.account});
+      console.log(App.signer);
+      return instance.connect(App.signer).vote(candidateId, {from: App.account});
     }).then((result)=>{
+      location.reload(); 
       $("#content").hide();
       $("#loader").show();
     }).catch((err)=>{
       console.error(err);
     });
-  }
+  },
+  
 };
 
 $(function() {
-  $(window).load(function() {
-    App.init();
+  $(window).load(async function() {
+    await App.init();
   });
 });
