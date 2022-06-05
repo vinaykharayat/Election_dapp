@@ -1,8 +1,8 @@
 App = {
-  web3Provider: null,
+  web3Provider: new ethers.providers.Web3Provider(window.ethereum),
   contracts: {},
   account:"0X0",
-  electionContractAddress: "0x414C7A406b41F994D733764ae48f2aa36F10ab05",
+  electionContractAddress: "0xeC8e5c95562AE23EbcE61ce43685CD14967071A4",
   electionContractABI: null,
   signer: null,
 
@@ -17,28 +17,35 @@ App = {
     console.log("Account address :", await App.signer.getAddress());
     App.account = await App.signer.getAddress();
     $("#accountAddress").html("Your Account: " + App.account);
-    App.init();
-    return App.signer;
+    return App.init();
   },
 
   //Initialize connection from client(frontend) to blockchain
   initWeb3: async function() {
-    App.signer = await App.web3Provider.getSigner();
-    if(App.web3Provider !== 'null'){
+    // try{
+    //   App.web3Provider.getSigner()
+    // }catch(err){
+    //   console.log("Metamask not connected");
+    //   alert("Please connect to Metamask");
+    //   return;
+    // }
+    const accounts = await App.web3Provider.listAccounts();
+    if(accounts.length > 0 && App.web3Provider.isMetaMask !==true){
       
       //If a web3 instance is already provided by Metamask.
       $("#connect").prop("disabled", true);
       App.web3Provider = new ethers.providers.Web3Provider(window.ethereum);
-      App.signer = await App.web3Provider.getSigner();
+      App.signer = App.web3Provider.getSigner();
       App.account = App.signer.getAddress();
       web3 = new Web3(App.web3Provider);
       return App.initContract();
 
     }else{
       $("#connect").prop("disabled", false);
+      alert("Please connect to Metamask");
       // App.web3Provider = new ethers.providers.Web3Provider(window.ethereum)
       // web3 = new Web3(App.web3Provider);
-      alert("Please connect to Metamask");
+      
       return;
 
     }
@@ -46,7 +53,7 @@ App = {
   },
 
   //Loads contracts to frontend application
-  initContract:async function() {
+  initContract: function() {
 
     $.getJSON("src/js/Election.json", (election)=>{
       App.electionContractABI = election;
@@ -55,9 +62,8 @@ App = {
         App.electionContractABI,
         App.web3Provider
       );
-      console.log(App.electionContractABI);
 
-      App.listenForEvents();
+      // App.listenForEvents();
       return App.render();
 
     });
@@ -88,11 +94,9 @@ App = {
     //Load contract data
     App.contracts.Election.deployed().then((instance)=>{
       electionInstance = instance;
-      console.log("electionInstance", electionInstance);
     });
     App.contracts.Election.deployed().then((instance)=>{
       electionInstance = instance;
-      console.log("candidatesCount",electionInstance.candidatesCount());
       return electionInstance.candidatesCount();
     }).then((candidatesCount)=>{
       var candidatesResults = $("#candidatesResults");
@@ -102,7 +106,6 @@ App = {
       candidatesSelect.empty();
 
       for(var i = 1; i<= candidatesCount; i++){
-        console.log("candidates",electionInstance.candidates(i));
         electionInstance.candidates(i).then((candidate)=>{
           var id = candidate[0];
           var name = candidate[1];
@@ -116,9 +119,7 @@ App = {
            candidatesSelect.append(candidateOption);
         });
       }
-      console.log("account",App.account);
-
-      console.log("voters",electionInstance.voters(App.account));
+      console.log("candidatesCount", App.account);
       return electionInstance.voters(App.account);
     }).then((hasVoted)=>{
       if(hasVoted){
@@ -136,7 +137,6 @@ App = {
     // $("#loader").show();
     var candidateId = $('#candidatesSelect').val();
     App.contracts.Election.deployed().then((instance)=>{
-      console.log(App.signer);
       return instance.connect(App.signer).vote(candidateId, {from: App.account});
     }).then((result)=>{
       location.reload(); 
@@ -144,6 +144,7 @@ App = {
       $("#loader").show();
     }).catch((err)=>{
       console.error(err);
+      alert("You have already voted");
     });
   },
   
@@ -151,6 +152,6 @@ App = {
 
 $(function() {
   $(window).load(async function() {
-    await App.init();
+     App.init();
   });
 });
