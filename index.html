@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,49 +17,86 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
-  <body>
-    <div class="container" style="width: 650px;">
-      <div class="row">
-        <div class="col-lg-12">
-          <h1 class="text-center">Election Results</h1>
-          <hr/>
-          <br/>
-          <div id="loader">
-            <p class="text-center">Loading...</p>
-          </div>
-          <div id="content" style="display: none;">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Name</th>
-                  <th scope="col">Votes</th>
-                </tr>
-              </thead>
-              <tbody id="candidatesResults">
-              </tbody>
-            </table>
-            <hr/>
-            <form onSubmit="App.castVote(); return false;">
-              <div class="form-group">
-                <label for="candidatesSelect">Select Candidate</label>
-                <select class="form-control" id="candidatesSelect">
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary">Vote</button>
-              <hr />
-            </form>
-            <p id="accountAddress" class="text-center"></p>
-          </div>
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Election DApp</a>
+            </div>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a id="about" data-toggle="modal" data-target="#aboutModal" class="glow-on-hover" type="button" href="#"><span class="glyphicon glyphicon-user"></span>What is this?</a>
+                </li>
+            </ul>
         </div>
-      </div>
+    </nav>
+
+    <!-- Modal -->
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="aboutModalLabel">About Election DApp</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="about">
+                        This is a web application that allows you to vote for the candidates in the election. You will have to use polygon mumbai testnet to vote.
+                        <h3>How to add mumbai polygon testnet to metamask?</h4>
+                            <ol>
+                                <li>Go to <a href="https://mumbai.polygonscan.com/">mumbai.polygonscan.com</a></li>
+                                <li>Click on the button "Add mumbai network" at the footer.</li>
+                            </ol>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="width: 650px;">
+        <div class="row">
+            <div class="col-lg-12">
+                <h1 class="text-center">Election DApp</h1>
+                <hr/>
+                <br/>
+                <div class="text-center" id="loader">
+                    <p class="text-center">Loading...</p>
+                </div>
+                <div id="content" style="display: none;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Votes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidatesResults">
+                        </tbody>
+                    </table>
+                    <hr/>
+                    <form onSubmit="App.castVote(); return false;">
+                        <div class="form-group">
+                            <label for="candidatesSelect">Select Candidate</label>
+                            <select class="form-control" id="candidatesSelect">
+                </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Vote</button>
+                        <hr />
+                    </form>
+                    <p id="accountAddress" class="text-center"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center">
+        <button id="connect" class="btn btn-primary " onclick="App.connectMetamask();">Connect wallet</button>
     </div>
 
-    <button id="connect" onclick="App.connectMetamask();">Connect wallet</button>
-
-    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
-        type="application/javascript"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -67,5 +105,6 @@
     <script src="src/js/web3.min.js"></script>
     <script src="src/js/truffle-contract.js"></script>
     <script src="src/js/app.js"></script>
-  </body>
+</body>
+
 </html>
